@@ -1,17 +1,15 @@
-const mongoose = require("mongoose"); // 몽구스를 가져온다.
-const bcrypt = require("bcrypt"); // 비밀번호를 암호화 시키기 위해
+import mongoose from "mongoose"; // 몽구스를 가져온다.
+import bcrypt from "bcrypt"; // 비밀번호를 암호화 시키기 위해
 const saltRounds = 10; // salt를 몇 글자로 할지
-const jwt = require("jsonwebtoken"); // 토큰을 생성하기 위해
-const Schema = mongoose.Schema;
+import jwt from "jsonwebtoken"; // 토큰을 생성하기 위해
+// const { Schema } = "mongoose";
 
-const counterSchema = mongoose.Schema({
+const counterSchema = new mongoose.Schema({
     _id: { type: String, required: true },
     seq: { type: Number, default: 0 },
 });
 
 const Counter = mongoose.model("Counter", counterSchema);
-
-module.exports = { Counter }; // 다른 곳에서도 사용할 수 있도록 export 해준다.
 
 // 이미 존재하는지 확인
 async function initializCounter() {
@@ -45,4 +43,5 @@ async function initializCounter() {
         console.error("Error initializing counter:", error);
     }
 }
-initializCounter();
+// initializCounter();
+export { Counter };

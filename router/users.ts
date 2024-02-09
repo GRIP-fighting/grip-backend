@@ -1,12 +1,20 @@
-var express = require("express");
-var router = express.Router();
-const fs = require("fs").promises;
-const { auth } = require("../middleware/auth.js");
-const { User } = require("../models/User.js"); // 모델 스키마 가져오기
-const { Map } = require("../models/Map.js");
-const { Solution } = require("../models/Solution.js");
-const { Counter } = require("../models/Counter.js");
-const { uploadImage, getImage, getUrl } = require("../config/uploadImage.js");
+import express from "express";
+import { Request, Response, NextFunction } from "express";
+
+import fs from "fs/promises";
+import { auth } from "../middleware/auth";
+import { User } from "../model/User"; // 모델 스키마 가져오기
+import { Map } from "../model/Map";
+import { Solution } from "../model/Solution";
+import { Counter } from "../model/Counter";
+import { uploadImage, getUrl } from "../config/uploadImage";
+
+const router = express.Router();
+
+interface CustomRequest extends Request {
+    user?: any; // 사용자 정의 타입에 맞게 조정
+    file?: any; // multer 파일 타입
+}
 
 // 회원가입
 router.post("/register", async (req, res) => {
@@ -50,22 +58,22 @@ router.post("/login", async (req, res) => {
 });
 
 // 로그아웃
-router.get("/logout", auth, async (req, res) => {
+router.get("/logout", auth, async (req: CustomRequest, res: Response) => {
     try {
         const updatedUser = await User.findOneAndUpdate(
-            { _id: req.user._id },
+            { _id: req.user?._id },
             { token: "" }
         );
         res.status(200).send({ success: true });
-    } catch (err) {
+    } catch (err: any) {
         res.json({ success: false, err });
     }
 });
 
 // 계정 탈퇴
-router.delete("/", auth, async (req, res) => {
+router.delete("/", auth, async (req: CustomRequest, res: Response) => {
     try {
-        const userId = req.user._id;
+        const userId = req.user?._id;
         const deletedUser = await User.findByIdAndDelete(userId);
         if (!deletedUser) {
             return res
@@ -76,7 +84,7 @@ router.delete("/", auth, async (req, res) => {
             success: true,
             message: "User account has been successfully deleted.",
         });
-    } catch (err) {
+    } catch (err: any) {
         res.status(500).json({ success: false, message: err.message });
     }
 });
@@ -97,11 +105,11 @@ router.get("/", auth, async (req, res) => {
                 success: true,
                 users: updatedUsers,
             });
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error updating users with signed URLs:", error);
             throw error;
         }
-    } catch (error) {
+    } catch (error: any) {
         res.status(500).json({ success: false, error });
     }
 });
@@ -111,7 +119,7 @@ router.patch(
     "/profileImage",
     auth,
     uploadImage.single("profileImage"),
-    async (req, res) => {
+    async (req: CustomRequest, res: Response) => {
         const user = req.user;
         console.log("users-profileImage-save");
         try {
@@ -127,54 +135,6 @@ router.patch(
         }
     }
 );
-
-// 자신의 프로필 사진 가져오기
-router.get("/profileImage", auth, async (req, res) => {
-    const user = req.user;
-    try {
-        if (user.profileImagePath == "") {
-            return res.status(404).send("profileImagePath not found");
-        }
-        const imageData = await getImage(user.profileImagePath); //IncomingMessage
-
-        // 테스트용
-        const filePath = "./test.jpeg";
-        const saveBufferToFile = async (buffer) => {
-            try {
-                await fs.writeFile(filePath, buffer);
-                console.log(`File saved to ${filePath}`);
-            } catch (error) {
-                console.error("Error writing file:", error);
-            }
-        };
-        saveBufferToFile(imageData);
-
-        // 전송용
-        res.setHeader("Content-Type", "image/png");
-        imageData.pipe(res);
-    } catch (error) {
-        res.status(500).send("An error occurred");
-    }
-});
-
-// 프로필 사진 가져오기
-router.get("/profileImage/:userId", auth, async (req, res) => {
-    const userId = req.params.userId;
-    const user = await User.findOne({ userId: userId });
-    if (!user) {
-        return res.status(404).json({
-            success: false,
-            message: "사용자를 찾을 수 없습니다.",
-        });
-    }
-    try {
-        const imageData = await getImage(user.profileImagePath); //IncomingMessage
-        res.setHeader("Content-Type", "image/png");
-        imageData.pipe(res);
-    } catch (error) {
-        res.status(500).send("An error occurred");
-    }
-});
 
 // 프로필 사진 가져오기
 router.get("/profileImageUrl/:userId", auth, async (req, res) => {
@@ -207,7 +167,9 @@ router.get("/:userId", auth, async (req, res) => {
             });
         }
         const imageData = await getUrl(user.profileImagePath); //IncomingMessage
-        const likedMaps = await Map.find({ mapId: { $in: user.likedMapId } });
+        const likedMaps = await Map.find({
+            mapId: { $in: user.likedMapId || "" },
+        });
         const likedSolutions = await Solution.find({
             solutionId: { $in: user.likedSolutionId },
         });
@@ -230,4 +192,4 @@ router.get("/:userId", auth, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

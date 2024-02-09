@@ -1,10 +1,10 @@
-var express = require("express");
-var router = express.Router();
-const { auth } = require("../middleware/auth.js");
-const { User } = require("../models/User.js"); // 모델 스키마 가져오기
-const { Map } = require("../models/Map.js");
-const { Solution } = require("../models/Solution.js");
-const { Counter } = require("../models/Counter.js");
+import express from "express";
+const router = express.Router();
+import { auth } from "../middleware/auth";
+import { User } from "../model/User"; // 모델 스키마 가져오기
+import { Map } from "../model/Map";
+import { Solution } from "../model/Solution";
+import { Counter } from "../model/Counter";
 
 // map 추가
 router.post("/", async (req, res) => {
@@ -160,4 +160,4 @@ router.patch("/:mapId", auth, async (req, res) => {
     }
 });
 
-module.exports = router;
+export default router;

@@ -1,11 +1,23 @@
-const mongoose = require("mongoose"); // 몽구스를 가져온다.
-const bcrypt = require("bcrypt"); // 비밀번호를 암호화 시키기 위해
+import mongoose from "mongoose"; // 몽구스를 가져온다.
+import bcrypt from "bcrypt"; // 비밀번호를 암호화 시키기 위해
 const saltRounds = 10; // salt를 몇 글자로 할지
-const jwt = require("jsonwebtoken"); // 토큰을 생성하기 위해
-const Schema = mongoose.Schema;
-const { Counter } = require("./Counter.js");
+import jwt from "jsonwebtoken"; // 토큰을 생성하기 위해
+// import { Schema } from "mongoose";
+import { Counter } from "./Counter";
 
-const userSchema = mongoose.Schema({
+interface IUser extends Document {
+    profileImagePath?: any;
+    token?: any;
+    comparePassword: (candidatePassword: string) => Promise<boolean>;
+    generateToken: () => Promise<any>;
+
+    likedMapId: Number[];
+    likedSolutionId: Number[];
+    mapId: Number[];
+    solutionId: Number[];
+}
+
+const userSchema: mongoose.Schema = new mongoose.Schema({
     userId: {
         type: Number,
         unique: true,
@@ -80,10 +92,10 @@ userSchema.pre("save", async function (next) {
         // 비밀번호 암호화
         if (user.isModified("password")) {
             const salt = await bcrypt.genSalt(saltRounds);
-            user.password = await bcrypt.hash(user.password, salt);
+            user.password = await bcrypt.hash(user.password as string, salt);
         }
         next();
-    } catch (error) {
+    } catch (error: any) {
         next(error);
     }
 });
@@ -96,16 +108,16 @@ userSchema.methods.generateToken = function () {
         const token = jwt.sign(user._id.toHexString(), "secretToken");
         user.token = token;
         user.save()
-            .then((user) => {
+            .then((user: any) => {
                 resolve(user);
             })
-            .catch((err) => {
+            .catch((err: any) => {
                 reject(err);
             });
     });
 };
 
-userSchema.methods.comparePassword = function (plainPassword) {
+userSchema.methods.comparePassword = function (plainPassword: any) {
     const user = this;
     return new Promise((resolve, reject) => {
         bcrypt.compare(plainPassword, user.password, function (err, isMatch) {
@@ -122,19 +134,19 @@ userSchema.methods.comparePassword = function (plainPassword) {
 userSchema.statics.findByToken = function (token) {
     const user = this;
     return new Promise((resolve, reject) => {
-        jwt.verify(token, "secretToken", function (err, decoded) {
+        jwt.verify(token, "secretToken", function (err: any, decoded: any) {
             if (err) return reject(err);
             user.findOne({ _id: decoded, token: token })
-                .then((user) => {
+                .then((user: any) => {
                     resolve(user);
                 })
-                .catch((err) => {
+                .catch((err: any) => {
                     reject(err);
                 });
         });
     });
 };
 
-const User = mongoose.model("User", userSchema); // 스키마를 모델로 감싸준다.
+const User = mongoose.model<IUser>("User", userSchema);
 
-module.exports = { User }; // 다른 곳에서도 사용할 수 있도록 export 해준다.
+export { User };

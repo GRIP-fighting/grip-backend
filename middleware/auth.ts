@@ -1,13 +1,13 @@
-const { User } = require("../models/User");
+import { User } from "../model/User"; // 모델 스키마 가져오기
 
-let auth = async (req, res, next) => {
+let auth = async (req: any, res: any, next: any) => {
     let token = req.cookies.x_auth;
 
     const user = await User.findOne({ userId: 1 });
     req.user = user;
     next();
 
-    // // User.findByToken을 프로미스로 처리
+    // User.findByToken을 프로미스로 처리
     // User.findByToken(token)
     //     .then((user) => {
     //         if (!user) return res.json({ isAuth: false, error: true });
@@ -20,4 +20,4 @@ let auth = async (req, res, next) => {
     //         return res.status(400).json({ isAuth: false, error: true });
     //     });
 };
-module.exports = { auth };
+export { auth };

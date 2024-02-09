@@ -1,9 +1,9 @@
-const mongoose = require("mongoose"); // 몽구스를 가져온다.
-const Schema = mongoose.Schema;
-const { User } = require("../models/User.js"); // 모델 스키마 가져오기
-const { Counter } = require("./Counter.js");
+import mongoose from "mongoose"; // 몽구스를 가져온다.
+// const { Schema } = mongoose;
+import { User } from "./User"; // 모델 스키마 가져오기
+import { Counter } from "./Counter";
 
-const mapSchema = mongoose.Schema({
+const mapSchema = new mongoose.Schema({
     mapId: {
         type: Number,
         unique: true,
@@ -55,12 +55,12 @@ mapSchema.pre("save", async function (next) {
                     { userId: { $in: map.designer } },
                     { $push: { mapId: map.mapId } }
                 );
-            } catch (error) {
+            } catch (error: any) {
                 next(error);
             }
         }
         next();
-    } catch (error) {
+    } catch (error: any) {
         next(error);
     }
 });
@@ -76,4 +76,4 @@ mapSchema.statics.findDetailsByMapId = async function (mapId) {
 
 const Map = mongoose.model("Map", mapSchema);
 
-module.exports = { Map };
+export { Map };
