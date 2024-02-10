@@ -2,12 +2,12 @@ import express from "express";
 import { Request, Response, NextFunction } from "express";
 
 import fs from "fs/promises";
-import { auth } from "../middleware/auth";
-import { User } from "../model/User"; // 모델 스키마 가져오기
-import { Map } from "../model/Map";
-import { Solution } from "../model/Solution";
-import { Counter } from "../model/Counter";
-import { uploadImage, getUrl } from "../config/uploadImage";
+import { auth } from "@src/middleware/auth";
+import { User } from "@src/model/User"; // 모델 스키마 가져오기
+import { Map } from "@src/model/Map";
+import { Solution } from "@src/model/Solution";
+import { Counter } from "@src/model/Counter";
+import { uploadImage, getUrl } from "@src/config/uploadImage";
 
 const router = express.Router();
 

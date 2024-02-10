@@ -1,7 +1,7 @@
 import multer from "multer";
 import multerS3 from "multer-s3";
-import s3 from "./s3";
-import config from "./key"; // config 폴더에 있는 key.ts를 가져온다.
+import s3 from "@src/config/s3";
+import config from "@src/config/key"; // config 폴더에 있는 key.ts를 가져온다.
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 

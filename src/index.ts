@@ -2,11 +2,12 @@ import express from "express";
 import bodyParser from "body-parser";
 import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
+import "module-alias/register";
 
-import usersRouter from "./router/users";
+import usersRouter from "@src/router/users";
 // import mapsRouter from "./router/maps";
 // import solutionsRouter from "./router/solutions";
-import config from "./config/key";
+import config from "@src/config/key";
 
 const app = express(); // express를 이용해서 app을 만들어준다.
 const port = 8000; // port 번호를 5000번으로 설정

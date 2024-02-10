@@ -3,7 +3,7 @@ import bcrypt from "bcrypt"; // 비밀번호를 암호화 시키기 위해
 const saltRounds = 10; // salt를 몇 글자로 할지
 import jwt from "jsonwebtoken"; // 토큰을 생성하기 위해
 // import { Schema } from "mongoose";
-import { Counter } from "./Counter";
+import { Counter } from "@src/model/Counter";
 
 interface IUser extends Document {
     profileImagePath?: any;

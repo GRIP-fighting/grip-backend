@@ -1,4 +1,4 @@
-import { User } from "../model/User"; // 모델 스키마 가져오기
+import { User } from "@src/model/User"; // 모델 스키마 가져오기
 
 let auth = async (req: any, res: any, next: any) => {
     let token = req.cookies.x_auth;

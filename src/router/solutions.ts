@@ -1,9 +1,9 @@
 import express from "express";
 const router = express.Router();
-import { auth } from "../middleware/auth";
-import { User } from "../model/User"; // 모델 스키마 가져오기
-import { Map } from "../model/Map";
-import { Solution } from "../model/Solution";
+import { auth } from "@src/middleware/auth";
+import { User } from "@src/model/User"; // 모델 스키마 가져오기
+import { Map } from "@src/model/Map";
+import { Solution } from "@src/model/Solution";
 
 // solution 추가
 router.post("/", auth, async (req, res) => {
