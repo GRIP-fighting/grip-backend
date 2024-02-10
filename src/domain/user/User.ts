@@ -2,8 +2,7 @@ import mongoose from "mongoose"; // 몽구스를 가져온다.
 import bcrypt from "bcrypt"; // 비밀번호를 암호화 시키기 위해
 const saltRounds = 10; // salt를 몇 글자로 할지
 import jwt from "jsonwebtoken"; // 토큰을 생성하기 위해
-// import { Schema } from "mongoose";
-import { Counter } from "@src/domain/Counter";
+import AutoIncrement from "mongoose-sequence";
 
 interface IUser extends Document {
     profileImagePath?: any;
@@ -77,18 +76,12 @@ const userSchema: mongoose.Schema = new mongoose.Schema({
     },
 });
 
+userSchema.plugin(AutoIncrement, { inc_field: "userId" });
+
 // save하기 전에 비밀번호를 암호화 시킨다.
 userSchema.pre("save", async function (next) {
     const user = this;
     try {
-        if (this.isNew) {
-            const counter = await Counter.findByIdAndUpdate(
-                { _id: "userId" },
-                { $inc: { seq: 1 } },
-                { new: true, upsert: true }
-            );
-            user.userId = counter.seq;
-        }
         // 비밀번호 암호화
         if (user.isModified("password")) {
             const salt = await bcrypt.genSalt(saltRounds);

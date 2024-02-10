@@ -5,12 +5,12 @@ import { Request, Response, NextFunction } from "express";
 
 import fs from "fs/promises";
 import { auth } from "@src/middleware/auth";
-import { User } from "@src/domain/user/User"; // 모델 스키마 가져오기
-import { Map } from "@src/domain/map/Map";
-import { Solution } from "@src/domain/solution/Solution";
-import { Counter } from "@src/domain/Counter";
+import { User } from "@src/domain/user/user"; // 모델 스키마 가져오기
+import { Map } from "@src/domain/map/map";
+import { Solution } from "@src/domain/solution/solution";
+import { Counter } from "@src/domain/counter";
 import { uploadImage, getUrl } from "@src/config/uploadImage";
-import AppError from "@src/config/AppError";
+import AppError from "@src/config/app-error";
 import userService from "@src/domain/user/userService";
 
 const router = express.Router();

@@ -1,7 +1,7 @@
 import mongoose from "mongoose"; // 몽구스를 가져온다.
 // const { Schema } = mongoose;
-import { User } from "@src/domain/user/User"; // 모델 스키마 가져오기
-import { Counter } from "@src/model/Counter";
+import { User } from "@src/domain/user/user"; // 모델 스키마 가져오기
+import { Counter } from "@src/model/counter";
 
 const mapSchema = new mongoose.Schema({
     mapId: {

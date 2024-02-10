@@ -1,5 +1,5 @@
-import AppError from "@src/config/AppError";
-import { User } from "@src/domain/user/User";
+import AppError from "@src/config/app-error";
+import { User } from "@src/domain/user/user";
 
 class UserService {
     async createUser(userData: any): Promise<any> {
