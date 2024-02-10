@@ -30,168 +30,95 @@ router.post(
 );
 
 // 로그인
-router.post("/login", async (req, res) => {
-    try {
-        const user = await User.findOne({ email: req.body.email });
-        if (!user) {
-            return res.json({
-                loginSuccess: false,
-                message: "이메일에 해당하는 유저가 없습니다.",
-            });
-        }
-        const isMatch = await user.comparePassword(req.body.password);
-
-        if (!isMatch) {
-            return res.json({
-                loginSuccess: false,
-                message: "비밀번호가 틀렸습니다.",
-            });
-        }
-
-        const tokenUser = await user.generateToken();
-        tokenUser.profileImagePath = await getUrl(tokenUser.profileImagePath);
-
-        res.cookie("x_auth", tokenUser.token)
+router.post(
+    "/login",
+    asyncHandler(async (req, res, next) => {
+        const { email, password } = req.body;
+        const user = await userService.authenticateUser(email, password);
+        res.cookie("x_auth", user.token)
             .status(200)
-            .json({ loginSuccess: true, user: tokenUser });
-    } catch (err) {
-        res.status(400).send(err);
-    }
-});
+            .json({ loginSuccess: true, user: user });
+    })
+);
 
 // 로그아웃
-router.get("/logout", auth, async (req: CustomRequest, res: Response) => {
-    try {
-        const updatedUser = await User.findOneAndUpdate(
-            { _id: req.user?._id },
-            { token: "" }
-        );
+router.get(
+    "/logout",
+    auth,
+    asyncHandler(async (req: CustomRequest, res: Response) => {
+        await userService.logoutUser(req.body.userId);
         res.status(200).send({ success: true });
-    } catch (err: any) {
-        res.json({ success: false, err });
-    }
-});
+    })
+);
 
 // 계정 탈퇴
-router.delete("/", auth, async (req: CustomRequest, res: Response) => {
-    try {
+router.delete(
+    "/",
+    auth,
+    asyncHandler(async (req: CustomRequest, res: Response) => {
         const userId = req.user?._id;
-        const deletedUser = await User.findByIdAndDelete(userId);
-        if (!deletedUser) {
-            return res
-                .status(404)
-                .json({ success: false, message: "User not found." });
-        }
+        await userService.deleteUser(userId);
         res.status(200).json({
             success: true,
             message: "User account has been successfully deleted.",
         });
-    } catch (err: any) {
-        res.status(500).json({ success: false, message: err.message });
-    }
-});
+    })
+);
 
 // 유저 리스트 가져오기
-router.get("/", auth, async (req, res) => {
-    try {
-        const users = await User.find({}).select("-password -token -__v");
-
-        try {
-            const updatedUsers = await Promise.all(
-                users.map(async (user) => {
-                    user.profileImagePath = await getUrl(user.profileImagePath);
-                    return user;
-                })
-            );
-            return res.status(200).json({
-                success: true,
-                users: updatedUsers,
-            });
-        } catch (error: any) {
-            console.error("Error updating users with signed URLs:", error);
-            throw error;
-        }
-    } catch (error: any) {
-        res.status(500).json({ success: false, error });
-    }
-});
+router.get(
+    "/",
+    auth,
+    asyncHandler(async (req: CustomRequest, res: Response, next) => {
+        const updatedUsers =
+            await userService.getUsersWithUpdatedProfileImages();
+        res.status(200).json({
+            success: true,
+            users: updatedUsers,
+        });
+    })
+);
 
 // 프로필 사진 저장
 router.patch(
     "/profileImage",
     auth,
     uploadImage.single("profileImage"),
-    async (req: CustomRequest, res: Response) => {
-        const user = req.user;
-        console.log("users-profileImage-save");
-        try {
-            const imagePath = req.file.location.split("/").pop();
-            user.profileImagePath = imagePath;
-            await user.save();
-            res.status(200).send({
-                success: true,
-                user: user,
-            });
-        } catch (error) {
-            res.status(500).send("An error occurred");
-        }
-    }
+    asyncHandler(async (req: CustomRequest, res: Response) => {
+        const userId = req.params.userId;
+        const imageUrl = await userService.getUserProfileImageUrl(userId);
+        res.status(200).send({ success: true, url: imageUrl });
+    })
 );
 
 // 프로필 사진 가져오기
-router.get("/profileImageUrl/:userId", auth, async (req, res) => {
-    const userId = req.params.userId;
-    const user = await User.findOne({ userId: userId });
-    if (!user) {
-        return res.status(404).json({
-            success: false,
-            message: "사용자를 찾을 수 없습니다.",
-        });
-    }
-    try {
-        const imageUrl = await getUrl(user.profileImagePath); //IncomingMessage
-        console.log(imageUrl);
+router.get(
+    "/profileImageUrl/:userId",
+    auth,
+    asyncHandler(async (req, res) => {
+        const userId = req.params.userId;
+        const imageUrl = await userService.getUserProfileImageUrl(userId);
         res.status(200).send({ url: imageUrl });
-    } catch (error) {
-        res.status(500).send("An error occurred");
-    }
-});
+    })
+);
 
 // 특정 유저 디테일 가져오기
-router.get("/:userId", auth, async (req, res) => {
-    try {
-        const userId = req.params.userId;
-        const user = await User.findOne({ userId: userId });
-        if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: "사용자를 찾을 수 없습니다.",
-            });
-        }
-        const imageData = await getUrl(user.profileImagePath); //IncomingMessage
-        const likedMaps = await Map.find({
-            mapId: { $in: user.likedMapId || "" },
-        });
-        const likedSolutions = await Solution.find({
-            solutionId: { $in: user.likedSolutionId },
-        });
-        const maps = await Map.find({ mapId: { $in: user.mapId } });
-        const solutions = await Solution.find({
-            solutionId: { $in: user.solutionId },
-        });
-        res.status(200).json({
-            success: true,
-            user: user,
-            imageUrl: imageData,
-            likedMaps: likedMaps,
-            likedSolutions: likedSolutions,
-            maps: maps,
-            solutions: solutions,
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ success: false, error });
-    }
-});
+// router.get(
+//     "/:userId",
+//     auth,
+//     asyncHandler(async (req, res) => {
+//         const userId = req.params.userId;
+//         const a = await userService.getUserDetails(userId);
+//         res.status(200).json({
+//             success: true,
+//             user: a.user,
+//             imageUrl: a.imageUrl,
+//             likedMaps: a.likedMaps,
+//             likedSolutions: a.likedSolutions,
+//             maps: a.maps,
+//             solutions: a.solutions,
+//         });
+//     })
+// );
 
 export default router;
