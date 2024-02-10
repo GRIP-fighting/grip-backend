@@ -1,8 +1,8 @@
 import mongoose from "mongoose"; // 몽구스를 가져온다.
 // const { Schema } = mongoose;
 import { Counter } from "@src/model/Counter";
-import { User } from "@src/model/User"; // 모델 스키마 가져오기
-import { Map } from "@src/model/Map";
+import { User } from "@src/domain/user/User"; // 모델 스키마 가져오기
+import { Map } from "@src/domain/map/Map";
 const solutionSchema = new mongoose.Schema({
     solutionId: {
         type: Number,

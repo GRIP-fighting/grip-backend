@@ -1,13 +1,17 @@
 import express from "express";
+import asyncHandler from "express-async-handler";
+
 import { Request, Response, NextFunction } from "express";
 
 import fs from "fs/promises";
 import { auth } from "@src/middleware/auth";
-import { User } from "@src/model/User"; // 모델 스키마 가져오기
-import { Map } from "@src/model/Map";
-import { Solution } from "@src/model/Solution";
-import { Counter } from "@src/model/Counter";
+import { User } from "@src/domain/user/User"; // 모델 스키마 가져오기
+import { Map } from "@src/domain/map/Map";
+import { Solution } from "@src/domain/solution/Solution";
+import { Counter } from "@src/domain/Counter";
 import { uploadImage, getUrl } from "@src/config/uploadImage";
+import AppError from "@src/config/AppError";
+import userService from "@src/domain/user/userService";
 
 const router = express.Router();
 
@@ -17,15 +21,13 @@ interface CustomRequest extends Request {
 }
 
 // 회원가입
-router.post("/register", async (req, res) => {
-    const user = new User(req.body); // body parser를 이용해서 json 형식으로 정보를 가져온다.
-    try {
-        await user.save();
-        res.status(200).json({ success: true });
-    } catch (error) {
-        res.json({ success: false, err: error });
-    }
-});
+router.post(
+    "/register",
+    asyncHandler(async (req, res, next) => {
+        const user = await userService.createUser(req.body);
+        res.status(200).json({ success: true, user });
+    })
+);
 
 // 로그인
 router.post("/login", async (req, res) => {
