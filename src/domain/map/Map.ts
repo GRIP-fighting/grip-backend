@@ -1,7 +1,7 @@
 import mongoose from "mongoose"; // 몽구스를 가져온다.
 // const { Schema } = mongoose;
 import { User } from "@src/domain/user/user"; // 모델 스키마 가져오기
-import { Counter } from "@src/model/counter";
+import AutoIncrement from "mongoose-sequence";
 
 const mapSchema = new mongoose.Schema({
     mapId: {
@@ -40,16 +40,12 @@ const mapSchema = new mongoose.Schema({
     ],
 });
 
+mapSchema.plugin(AutoIncrement, { inc_field: "userId" });
+
 mapSchema.pre("save", async function (next) {
     const map = this;
     try {
         if (this.isNew) {
-            const counter = await Counter.findByIdAndUpdate(
-                { _id: "mapId" },
-                { $inc: { seq: 1 } },
-                { new: true, upsert: true }
-            );
-            map.mapId = counter.seq;
             try {
                 await User.updateMany(
                     { userId: { $in: map.designer } },

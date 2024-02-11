@@ -3,6 +3,7 @@ import bcrypt from "bcrypt"; // 비밀번호를 암호화 시키기 위해
 const saltRounds = 10; // salt를 몇 글자로 할지
 import jwt from "jsonwebtoken"; // 토큰을 생성하기 위해
 import AutoIncrement from "mongoose-sequence";
+import AppError from "@src/config/app-error";
 
 interface IUser extends Document {
     profileImagePath?: any;
@@ -94,33 +95,19 @@ userSchema.pre("save", async function (next) {
 });
 
 // 토큰을 생성하는 메소드
-userSchema.methods.generateToken = function () {
+userSchema.methods.generateToken = async function () {
     const user = this;
-    return new Promise((resolve, reject) => {
-        // jsonwebtoken을 이용해서 token을 생성하기
-        const token = jwt.sign(user._id.toHexString(), "secretToken");
-        user.token = token;
-        user.save()
-            .then((user: any) => {
-                resolve(user);
-            })
-            .catch((err: any) => {
-                reject(err);
-            });
-    });
+    const token = jwt.sign(user._id.toHexString(), "secretToken");
+    if (!token) throw new AppError(400, "토큰 생성 오류");
+    user.token = token;
+    await user.save();
+    return user;
 };
 
-userSchema.methods.comparePassword = function (plainPassword: any) {
+userSchema.methods.comparePassword = async function (plainPassword: any) {
     const user = this;
-    return new Promise((resolve, reject) => {
-        bcrypt.compare(plainPassword, user.password, function (err, isMatch) {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(isMatch);
-            }
-        });
-    });
+    const isMatch = await bcrypt.compare(plainPassword, user.password);
+    return isMatch;
 };
 
 // 토큰을 복호화하는 메소드

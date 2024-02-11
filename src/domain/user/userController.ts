@@ -1,29 +1,30 @@
 import express from "express";
 import asyncHandler from "express-async-handler";
 
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 
-import fs from "fs/promises";
 import { auth } from "@src/middleware/auth";
-import { User } from "@src/domain/user/user"; // 모델 스키마 가져오기
-import { Map } from "@src/domain/map/map";
-import { Solution } from "@src/domain/solution/solution";
-import { Counter } from "@src/domain/counter";
-import { uploadImage, getUrl } from "@src/config/uploadImage";
-import AppError from "@src/config/app-error";
+import { uploadImage } from "@src/config/uploadImage";
 import userService from "@src/domain/user/userService";
+import AppError from "@src/config/app-error";
 
 const router = express.Router();
 
+interface User {
+    _id: Number;
+    userId: Number;
+    email: string;
+    // 사용자 정의 타입에 필요한 추가 속성들...
+}
+
 interface CustomRequest extends Request {
-    user?: any; // 사용자 정의 타입에 맞게 조정
-    file?: any; // multer 파일 타입
+    user?: User; // 사용자 정의 타입에 맞게 조정
 }
 
 // 회원가입
 router.post(
     "/register",
-    asyncHandler(async (req, res, next) => {
+    asyncHandler(async (req, res) => {
         const user = await userService.createUser(req.body);
         res.status(200).json({ success: true, user });
     })
@@ -32,12 +33,12 @@ router.post(
 // 로그인
 router.post(
     "/login",
-    asyncHandler(async (req, res, next) => {
+    asyncHandler(async (req, res) => {
         const { email, password } = req.body;
-        const user = await userService.authenticateUser(email, password);
+        const user = await userService.login(email, password);
         res.cookie("x_auth", user.token)
             .status(200)
-            .json({ loginSuccess: true, user: user });
+            .json({ success: true, user: user });
     })
 );
 
@@ -45,9 +46,9 @@ router.post(
 router.get(
     "/logout",
     auth,
-    asyncHandler(async (req: CustomRequest, res: Response) => {
+    asyncHandler(async (req, res) => {
         await userService.logoutUser(req.body.userId);
-        res.status(200).send({ success: true });
+        res.status(200).json({ success: true });
     })
 );
 
@@ -57,11 +58,9 @@ router.delete(
     auth,
     asyncHandler(async (req: CustomRequest, res: Response) => {
         const userId = req.user?._id;
+        if (!userId) throw new AppError(404, "Wrong Input");
         await userService.deleteUser(userId);
-        res.status(200).json({
-            success: true,
-            message: "User account has been successfully deleted.",
-        });
+        res.status(200).json({ success: true });
     })
 );
 
@@ -69,7 +68,7 @@ router.delete(
 router.get(
     "/",
     auth,
-    asyncHandler(async (req: CustomRequest, res: Response, next) => {
+    asyncHandler(async (req: CustomRequest, res: Response) => {
         const updatedUsers =
             await userService.getUsersWithUpdatedProfileImages();
         res.status(200).json({
@@ -85,7 +84,7 @@ router.patch(
     auth,
     uploadImage.single("profileImage"),
     asyncHandler(async (req: CustomRequest, res: Response) => {
-        const userId = req.params.userId;
+        const userId = req.user?.userId as Number;
         const imageUrl = await userService.getUserProfileImageUrl(userId);
         res.status(200).send({ success: true, url: imageUrl });
     })
@@ -96,9 +95,9 @@ router.get(
     "/profileImageUrl/:userId",
     auth,
     asyncHandler(async (req, res) => {
-        const userId = req.params.userId;
+        const userId = req.params.userId as unknown as Number;
         const imageUrl = await userService.getUserProfileImageUrl(userId);
-        res.status(200).send({ url: imageUrl });
+        res.status(200).send({ success: true, url: imageUrl });
     })
 );
 

@@ -1,6 +1,7 @@
 import mongoose from "mongoose"; // 몽구스를 가져온다.
 // const { Schema } = mongoose;
-import { Counter } from "@src/model/Counter";
+import AutoIncrement from "mongoose-sequence";
+
 import { User } from "@src/domain/user/user"; // 모델 스키마 가져오기
 import { Map } from "@src/domain/map/map";
 const solutionSchema = new mongoose.Schema({
@@ -27,20 +28,12 @@ const solutionSchema = new mongoose.Schema({
     },
 });
 
+solutionSchema.plugin(AutoIncrement, { inc_field: "solutionId" });
+
 solutionSchema.pre("save", async function (next) {
     const solution = this;
     try {
         if (this.isNew) {
-            const counter = await Counter.findByIdAndUpdate(
-                { _id: "solutionId" },
-                { $inc: { seq: 1 } },
-                { new: true, upsert: true }
-            );
-            if (!counter) {
-                throw new Error("Counter를 생성하거나 업데이트할 수 없습니다.");
-            }
-            solution.solutionId = counter.seq;
-
             const user = await User.findOne({ userId: solution.userId });
             if (!user) {
                 throw new Error("사용자를 찾을 수 없습니다.");
