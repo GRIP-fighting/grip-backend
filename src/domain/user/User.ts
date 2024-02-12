@@ -2,7 +2,7 @@ import mongoose from "mongoose"; // 몽구스를 가져온다.
 import bcrypt from "bcrypt"; // 비밀번호를 암호화 시키기 위해
 const saltRounds = 10; // salt를 몇 글자로 할지
 import jwt from "jsonwebtoken"; // 토큰을 생성하기 위해
-import AutoIncrement from "mongoose-sequence";
+import AutoIncrementFactory from "mongoose-sequence";
 import AppError from "@src/config/app-error";
 
 interface IUser extends Document {
@@ -10,9 +10,6 @@ interface IUser extends Document {
     token?: any;
     comparePassword: (candidatePassword: string) => Promise<boolean>;
     generateToken: () => Promise<any>;
-
-    likedMapId: Number[];
-    likedSolutionId: Number[];
     mapId: Number[];
     solutionId: Number[];
 }
@@ -48,26 +45,12 @@ const userSchema: mongoose.Schema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
-    liked: {
-        type: Number,
-        default: 0,
-    },
-    likedMapId: [
+    mapList: [
         {
             type: Number, // 또는 Integer로 변경
         },
     ],
-    likedSolutionId: [
-        {
-            type: Number, // 또는 Integer로 변경
-        },
-    ],
-    mapId: [
-        {
-            type: Number, // 또는 Integer로 변경
-        },
-    ],
-    solutionId: [
+    solutionList: [
         {
             type: Number, // 또는 Integer로 변경
         },
@@ -77,21 +60,17 @@ const userSchema: mongoose.Schema = new mongoose.Schema({
     },
 });
 
+// @ts-ignore
+const AutoIncrement = AutoIncrementFactory(mongoose);
+// @ts-ignore
 userSchema.plugin(AutoIncrement, { inc_field: "userId" });
 
 // save하기 전에 비밀번호를 암호화 시킨다.
 userSchema.pre("save", async function (next) {
     const user = this;
-    try {
-        // 비밀번호 암호화
-        if (user.isModified("password")) {
-            const salt = await bcrypt.genSalt(saltRounds);
-            user.password = await bcrypt.hash(user.password as string, salt);
-        }
-        next();
-    } catch (error: any) {
-        next(error);
-    }
+    const salt = await bcrypt.genSalt(saltRounds);
+    user.password = await bcrypt.hash(user.password as string, salt);
+    next();
 });
 
 // 토큰을 생성하는 메소드

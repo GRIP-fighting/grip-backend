@@ -40,7 +40,7 @@ const mapSchema = new mongoose.Schema({
     ],
 });
 
-mapSchema.plugin(AutoIncrement, { inc_field: "userId" });
+mapSchema.plugin(AutoIncrement, { inc_field: "mapId" });
 
 mapSchema.pre("save", async function (next) {
     const map = this;
