@@ -7,7 +7,7 @@ import { auth } from "@src/middleware/auth";
 import { uploadImage } from "@src/config/uploadImage";
 import userService from "@src/domain/user/user-service";
 import AppError from "@src/config/app-error";
-import { User } from "./user";
+import { User } from "@src/domain/user/user";
 
 const router = express.Router();
 

@@ -1,9 +1,8 @@
 import mongoose from "mongoose"; // 몽구스를 가져온다.
-// const { Schema } = mongoose;
-import AutoIncrement from "mongoose-sequence";
-
+import AutoIncrementFactory from "mongoose-sequence";
 import { User } from "@src/domain/user/user"; // 모델 스키마 가져오기
 import { Map } from "@src/domain/map/map";
+
 const solutionSchema = new mongoose.Schema({
     solutionId: {
         type: Number,
@@ -28,6 +27,9 @@ const solutionSchema = new mongoose.Schema({
     },
 });
 
+// @ts-ignore
+const AutoIncrement = AutoIncrementFactory(mongoose);
+// @ts-ignore
 solutionSchema.plugin(AutoIncrement, { inc_field: "solutionId" });
 
 solutionSchema.pre("save", async function (next) {

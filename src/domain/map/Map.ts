@@ -1,9 +1,11 @@
 import mongoose from "mongoose"; // 몽구스를 가져온다.
-// const { Schema } = mongoose;
-import { User } from "@src/domain/user/user"; // 모델 스키마 가져오기
-import AutoIncrement from "mongoose-sequence";
+import AutoIncrementFactory from "mongoose-sequence";
 
-const mapSchema = new mongoose.Schema({
+import { User } from "@src/domain/user/user";
+
+interface IUser extends Document {}
+
+const mapSchema: mongoose.Schema = new mongoose.Schema({
     mapId: {
         type: Number,
         unique: true,
@@ -19,57 +21,41 @@ const mapSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
-    liked: {
-        type: Number,
-        default: 0,
+    userList: [
+        {
+            type: Number, // 또는 Integer로 변경
+        },
+    ],
+    solutionList: [
+        {
+            type: Number, // 또는 Integer로 변경
+        },
+    ],
+    gymId: {
+        type: String,
     },
-    likedUserId: [
-        {
-            type: Number, // 또는 Integer로 변경
-        },
-    ],
-    designer: [
-        {
-            type: Number, // 또는 Integer로 변경
-        },
-    ],
-    solutionId: [
-        {
-            type: Number, // 또는 Integer로 변경
-        },
-    ],
+    startDate: {
+        type: Date,
+    },
+    endDate: {
+        type: Date,
+    },
 });
 
+// @ts-ignore
+const AutoIncrement = AutoIncrementFactory(mongoose);
+// @ts-ignore
 mapSchema.plugin(AutoIncrement, { inc_field: "mapId" });
 
 mapSchema.pre("save", async function (next) {
     const map = this;
-    try {
-        if (this.isNew) {
-            try {
-                await User.updateMany(
-                    { userId: { $in: map.designer } },
-                    { $push: { mapId: map.mapId } }
-                );
-            } catch (error: any) {
-                next(error);
-            }
-        }
-        next();
-    } catch (error: any) {
-        next(error);
-    }
+    await User.updateMany(
+        { userId: { $in: map.userList } },
+        { $push: { mapList: map.mapId } }
+    );
+    next();
 });
 
-mapSchema.statics.findDetailsByMapId = async function (mapId) {
-    try {
-        const map = await this.findOne({ mapId: mapId });
-        return map;
-    } catch (error) {
-        throw error;
-    }
-};
-
-const Map = mongoose.model("Map", mapSchema);
+const Map = mongoose.model<IUser>("Map", mapSchema);
 
 export { Map };
