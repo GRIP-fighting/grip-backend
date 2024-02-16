@@ -52,6 +52,9 @@ solutionSchema.pre("save", async function (next) {
     const map = await Map.findOne({ mapId: solution.mapId });
     if (!map) throw new AppError(404, "Map not found");
 
+    // data 오늘 날짜로
+    // solution path 경로 설정해서
+
     user.solutionList.push(solution.solutionId as Number);
     map.solutionList.push(solution.solutionId as Number);
     await user.save();

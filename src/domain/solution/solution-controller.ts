@@ -33,7 +33,7 @@ router.post(
     })
 );
 
-// solution 추가
+// solution 가져오기
 router.get(
     "/",
     auth,
@@ -48,7 +48,7 @@ router.get(
 
 // 솔루션 좋아요
 router.patch(
-    "/:solutionId/liked",
+    "liked/:solutionId",
     auth,
     asyncHandler(async (req: CustomRequest, res) => {
         const user = req.user;
@@ -61,7 +61,7 @@ router.patch(
 );
 
 router.delete(
-    "/:solutionId/delete",
+    "/:solutionId",
     auth,
     asyncHandler(async (req: CustomRequest, res) => {
         const user: any = req.user;

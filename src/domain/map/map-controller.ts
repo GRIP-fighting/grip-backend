@@ -21,11 +21,6 @@ interface CustomRequest extends Request {
     user?: User; // 사용자 정의 타입에 맞게 조정
 }
 
-// interface Map {
-//     solutionList: number[];
-//     // 사용자 정의 타입에 필요한 추가 속성들...
-// }
-
 // map 추가
 router.post(
     "/",
@@ -73,7 +68,7 @@ router.get(
 
 // 맵 삭제 - 자기 자신만
 router.delete(
-    "/:mapId/delete",
+    "/:mapId",
     auth,
     asyncHandler(async (req: CustomRequest, res) => {
         const user: any = req.user;

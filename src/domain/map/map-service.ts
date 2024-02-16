@@ -42,14 +42,16 @@ class MapService {
         return false;
     }
     async updateMap(mapId: any, mapName: String, userList: any) {
+        const map: any = await Map.findOne({ mapId: mapId });
+        if (!mapName) mapName = map.mapName;
+        if (!userList) userList = map.userList;
+
         const validDesignerIds = await User.find({
             userId: { $in: userList },
         }).select("userId");
-
         if (validDesignerIds.length !== userList.length)
             throw new AppError(404, "잘못된 사용자가 포함되어 있습니다.");
 
-        const map = await Map.findOne({ mapId: mapId });
         await Map.updateOne(
             { mapId: mapId },
             { $set: { mapName: mapName, userList: userList } }
