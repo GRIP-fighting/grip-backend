@@ -1,19 +1,20 @@
 import express from "express";
-import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
+import asyncHandler from "express-async-handler";
+
 import { auth } from "@src/middleware/auth";
 import { User } from "@src/domain/user/user"; // 모델 스키마 가져오기
 import { Map } from "@src/domain/map/map";
 import { Solution } from "@src/domain/solution/solution";
+
 import AppError from "@src/config/app-error";
-import mapService from "./map-service";
+import mapService from "@src/domain/map/map-service";
 
 const router = express.Router();
 
 interface User {
     userId: Number;
     email: string;
-    // 사용자 정의 타입에 필요한 추가 속성들...
 }
 
 interface CustomRequest extends Request {
@@ -28,6 +29,7 @@ interface CustomRequest extends Request {
 // map 추가
 router.post(
     "/",
+    auth,
     asyncHandler(async (req, res) => {
         const map: any = new Map(req.body);
         await map.save();

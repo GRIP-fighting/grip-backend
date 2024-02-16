@@ -2,6 +2,12 @@ import mongoose from "mongoose"; // 몽구스를 가져온다.
 import AutoIncrementFactory from "mongoose-sequence";
 import { User } from "@src/domain/user/user"; // 모델 스키마 가져오기
 import { Map } from "@src/domain/map/map";
+import AppError from "@src/config/app-error";
+
+interface IUser extends Document {
+    liked: any;
+    likedUserList: Number[];
+}
 
 const solutionSchema = new mongoose.Schema({
     solutionId: {
@@ -14,16 +20,22 @@ const solutionSchema = new mongoose.Schema({
     mapId: {
         type: Number, // 또는 Integer로 변경
     },
-    liked: {
-        type: Number,
-        default: 0,
-    },
     evaluatedLevel: {
         type: Number,
         default: 0,
     },
     solutionPath: {
         type: String,
+    },
+    date: {
+        type: Date,
+    },
+    liked: {
+        type: Number,
+        default: 0,
+    },
+    likedUserList: {
+        type: Number,
     },
 });
 
@@ -34,29 +46,19 @@ solutionSchema.plugin(AutoIncrement, { inc_field: "solutionId" });
 
 solutionSchema.pre("save", async function (next) {
     const solution = this;
-    try {
-        if (this.isNew) {
-            const user = await User.findOne({ userId: solution.userId });
-            if (!user) {
-                throw new Error("사용자를 찾을 수 없습니다.");
-            }
+    const user = await User.findOne({ userId: solution.userId });
+    if (!user) throw new AppError(404, "User not found");
 
-            const map = await Map.findOne({ mapId: solution.mapId });
-            if (!map) {
-                throw new Error("맵을 찾을 수 없습니다.");
-            }
+    const map = await Map.findOne({ mapId: solution.mapId });
+    if (!map) throw new AppError(404, "Map not found");
 
-            user.solutionId.push(solution.solutionId);
-            map.solutionId.push(solution.solutionId);
-            await user.save();
-            await map.save();
-        }
-        next();
-    } catch (error: any) {
-        next(error);
-    }
+    user.solutionList.push(solution.solutionId as Number);
+    map.solutionList.push(solution.solutionId as Number);
+    await user.save();
+    await map.save();
+    next();
 });
 
-const Solution = mongoose.model("Solution", solutionSchema); // 스키마를 모델로 감싸준다.
+const Solution = mongoose.model<IUser>("Solution", solutionSchema); // 스키마를 모델로 감싸준다.
 
 export { Solution };

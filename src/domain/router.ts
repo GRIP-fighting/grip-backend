@@ -10,7 +10,7 @@ const router = express.Router();
 router.use("/auth", authController);
 router.use("/user", userController);
 router.use("/map", mapController);
-// router.use("/solution", solutionController);
+router.use("/solution", solutionController);
 
 router.use(errorHandler);
 

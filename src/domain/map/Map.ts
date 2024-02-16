@@ -3,7 +3,9 @@ import AutoIncrementFactory from "mongoose-sequence";
 
 import { User } from "@src/domain/user/user";
 
-interface IUser extends Document {}
+interface IUser extends Document {
+    solutionList: Number[];
+}
 
 const mapSchema: mongoose.Schema = new mongoose.Schema({
     mapId: {

@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { Document, Model } from "mongoose";
 import bcrypt from "bcrypt";
 import AutoIncrementFactory from "mongoose-sequence";
 import jwt from "jsonwebtoken";
@@ -6,13 +7,17 @@ import AppError from "@src/config/app-error";
 
 const saltRounds = 10;
 
-interface IUser extends Document {
+interface IUserDocument extends Document {
     profileImagePath?: any;
     token?: any;
+
     comparePassword: (candidatePassword: string) => Promise<boolean>;
     generateToken: () => Promise<any>;
-    mapId: Number[];
-    solutionId: Number[];
+    mapList: Number[];
+    solutionList: Number[];
+}
+interface IUserModel extends Model<IUserDocument> {
+    findByToken: (token: any) => Promise<IUserDocument | null>;
 }
 
 const userSchema: mongoose.Schema = new mongoose.Schema({
@@ -91,22 +96,14 @@ userSchema.methods.comparePassword = async function (plainPassword: any) {
 };
 
 // 토큰을 복호화하는 메소드
-userSchema.statics.findByToken = function (token) {
-    const user = this;
-    return new Promise((resolve, reject) => {
-        jwt.verify(token, "secretToken", function (err: any, decoded: any) {
-            if (err) return reject(err);
-            user.findOne({ _id: decoded, token: token })
-                .then((user: any) => {
-                    resolve(user);
-                })
-                .catch((err: any) => {
-                    reject(err);
-                });
-        });
-    });
+userSchema.statics.findByToken = function (token: any) {
+    // const user = this;
+    const decoded: any = jwt.verify(token, "secretToken");
+    const newUser = this.findOne({ _id: decoded, token: token });
+    return newUser;
+    // return User.findOne({ _id: decoded, token: token }).exec(); // Promise를 반환하도록 수정
 };
 
-const User = mongoose.model<IUser>("User", userSchema);
+const User = mongoose.model<IUserDocument, IUserModel>("User", userSchema);
 
 export { User };

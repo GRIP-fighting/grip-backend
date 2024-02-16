@@ -10,21 +10,9 @@ interface CreateMapInput {
 }
 
 class MapService {
-    // async login(email: string, password: string) {
-    //     const user = await User.findOne({ email: email });
-    //     if (!user)
-    //         throw new AppError(404, "이메일에 해당하는 유저가 없습니다.");
-    //     const isMatch = await user.comparePassword(password);
-    //     if (!isMatch) throw new AppError(400, "비밀번호가 틀렸습니다.");
-    //     const tokenUser = await user.generateToken();
-    //     tokenUser.profileImagePath = await getUrl(tokenUser.profileImagePath);
-    //     return tokenUser;
-    // }
     async deleteUserFromUserList(user: any, mapId: Number) {
         const map: any = await Map.findOne({ mapId: mapId });
-
         if (!map) throw new AppError(404, "맵을 찾을 수 없습니다");
-
         if (!map.userList.includes(user.userId))
             throw new AppError(404, "User not found in the map.");
 
