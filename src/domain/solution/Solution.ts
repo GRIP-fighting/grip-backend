@@ -15,10 +15,10 @@ const solutionSchema = new mongoose.Schema({
         unique: true,
     },
     userId: {
-        type: Number, // 또는 Integer로 변경
+        type: Number,
     },
     mapId: {
-        type: Number, // 또는 Integer로 변경
+        type: Number,
     },
     evaluatedLevel: {
         type: Number,
@@ -34,9 +34,11 @@ const solutionSchema = new mongoose.Schema({
         type: Number,
         default: 0,
     },
-    likedUserList: {
-        type: Number,
-    },
+    likedUserList: [
+        {
+            type: Number, // 또는 Integer로 변경
+        },
+    ],
 });
 
 // @ts-ignore
@@ -53,6 +55,7 @@ solutionSchema.pre("save", async function (next) {
     if (!map) throw new AppError(404, "Map not found");
 
     // data 오늘 날짜로
+
     // solution path 경로 설정해서
 
     user.solutionList.push(solution.solutionId as Number);

@@ -74,8 +74,10 @@ userSchema.plugin(AutoIncrement, { inc_field: "userId" });
 // save하기 전에 비밀번호를 암호화 시킨다.
 userSchema.pre("save", async function (next) {
     const user = this;
-    const salt = await bcrypt.genSalt(saltRounds);
-    user.password = await bcrypt.hash(user.password as string, salt);
+    if (user.isModified("password")) {
+        const salt = await bcrypt.genSalt(saltRounds);
+        user.password = await bcrypt.hash(user.password as string, salt);
+    }
     next();
 });
 
@@ -96,10 +98,9 @@ userSchema.methods.comparePassword = async function (plainPassword: any) {
 };
 
 // 토큰을 복호화하는 메소드
-userSchema.statics.findByToken = function (token: any) {
-    // const user = this;
+userSchema.statics.findByToken = async function (token: any) {
     const decoded: any = jwt.verify(token, "secretToken");
-    const newUser = this.findOne({ _id: decoded, token: token });
+    const newUser = await this.findOne({ _id: decoded, token: token });
     return newUser;
     // return User.findOne({ _id: decoded, token: token }).exec(); // Promise를 반환하도록 수정
 };

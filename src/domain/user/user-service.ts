@@ -1,6 +1,8 @@
 import AppError from "@src/config/app-error";
 import { User } from "@src/domain/user/user";
-import { uploadImage, getUrl } from "@src/config/uploadImage";
+import { Map } from "@src/domain/map/map";
+import { Solution } from "@src/domain/solution/solution";
+import { uploadProfileImage, getUrl } from "@src/config/uploadImage";
 
 interface CreateUserInput {
     name: string;
@@ -15,7 +17,7 @@ class UserService {
     }
 
     async login(email: string, password: string) {
-        const user = await User.findOne({ email: email });
+        const user = await User.findOne({ email: email }).select("-__v");
         if (!user)
             throw new AppError(404, "이메일에 해당하는 유저가 없습니다.");
 
@@ -24,6 +26,9 @@ class UserService {
 
         const tokenUser = await user.generateToken();
         tokenUser.profileImagePath = await getUrl(tokenUser.profileImagePath);
+        tokenUser._id = null;
+        tokenUser.password = "";
+
         return tokenUser;
     }
 
@@ -46,7 +51,7 @@ class UserService {
     }
 
     async getUsersWithUpdatedProfileImages() {
-        const users = await User.find({}).select("-password -token -__v");
+        const users = await User.find({}).select("-password -token -__v -_id");
         const updateProfilePathUsers = await Promise.all(
             users.map(async (user) => {
                 user.profileImagePath = await getUrl(user.profileImagePath);
@@ -56,32 +61,34 @@ class UserService {
         return updateProfilePathUsers;
     }
 
-    // async getUserDetails(userId: Number) {
-    //     const user = await User.findOne({ userId: userId });
-    //     if (!user) throw new Error("사용자를 찾을 수 없습니다.");
+    async getUserDetails(userId: Number) {
+        const user = await User.findOne({ userId: userId });
+        if (!user) throw new Error("사용자를 찾을 수 없습니다.");
 
-    //     user.profileImagePath = await getUrl(user.profileImagePath);
+        user.profileImagePath = await getUrl(user.profileImagePath);
 
-    //     const maps = await Map.find({ _id: { $in: user.mapId || [] } });
-    //     const solutions = await Solution.find({
-    //         _id: { $in: user.solutionId || [] },
-    //     });
-    //     return {
-    //         user,
-    //         maps,
-    //         solutions,
-    //     };
-    // }
+        const mapList = await Map.find({ _id: { $in: user.mapList || [] } });
+        const solutionList = await Solution.find({
+            _id: { $in: user.solutionList || [] },
+        });
+        // user.mapList = mapList;
+        // user.solutionList = solutionList;
+        return {
+            user,
+            mapList,
+            solutionList,
+        };
+    }
 
     async updateUserProfileImage(user: any) {
         const profileImagePath = `profile_${user.userId}`;
         const updatedUserData = { profileImagePath };
-        await User.findByIdAndUpdate(user.userId, updatedUserData);
+        await User.findOneAndUpdate({ userId: user.userId }, updatedUserData);
         return profileImagePath;
     }
 
-    async getUserProfileImageUrl(userId: Number) {
-        const user = await User.findOne({ _id: userId }); // MongoDB에서는 _id 필드를 사용
+    async getUserProfileImageUrl(userId: String) {
+        const user = await User.findOne({ userId: userId }); // MongoDB에서는 _id 필드를 사용
         if (!user) throw new Error("사용자를 찾을 수 없습니다.");
         const imageUrl = await getUrl(user.profileImagePath);
         return imageUrl;

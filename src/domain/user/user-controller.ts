@@ -4,7 +4,7 @@ import asyncHandler from "express-async-handler";
 import { Request, Response } from "express";
 
 import { auth } from "@src/middleware/auth";
-import { uploadImage } from "@src/config/uploadImage";
+import { uploadProfileImage } from "@src/config/uploadImage";
 import userService from "@src/domain/user/user-service";
 import AppError from "@src/config/app-error";
 import { User } from "@src/domain/user/user";
@@ -78,26 +78,27 @@ router.get(
 );
 
 // 특정 유저 디테일 가져오기
-// router.get(
-//     "/:userId",
-//     auth,
-//     asyncHandler(async (req, res) => {
-//         const userId = req.params.userId;
-//         const userdetail = await userService.getUserDetails(userId);
-//         res.status(200).json({
-//             success: true,
-//             user: userdetail.user,
-//             maps: userdetail.maps,
-//             solutions: userdetail.solutions,
-//         });
-//     })
-// );
+router.get(
+    "/:userId",
+    auth,
+    asyncHandler(async (req, res) => {
+        const userId: any = req.params.userId;
+        const { user, mapList, solutionList } =
+            await userService.getUserDetails(userId);
+        res.status(200).json({
+            success: true,
+            user: user,
+            mapList: mapList,
+            solutionList: solutionList,
+        });
+    })
+);
 
 // 프로필 사진 저장
 router.patch(
     "/profileImage",
     auth,
-    uploadImage.single("profileImage"),
+    uploadProfileImage.single("profileImage"),
     asyncHandler(async (req: CustomRequest, res: Response) => {
         const user = req.user;
         const imageUrl = await userService.updateUserProfileImage(user as User);
@@ -110,7 +111,7 @@ router.get(
     "/profileImageUrl/:userId",
     auth,
     asyncHandler(async (req, res) => {
-        const userId = req.params.userId as unknown as Number;
+        const userId = req.params.userId;
         const imageUrl = await userService.getUserProfileImageUrl(userId);
         res.status(200).send({ success: true, url: imageUrl });
     })

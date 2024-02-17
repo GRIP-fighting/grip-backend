@@ -38,17 +38,17 @@ router.get(
     "/",
     auth,
     asyncHandler(async (req, res) => {
-        const solutions = await Solution.find({}).select("-__v");
+        const solutionList = await Solution.find({}).select("-__v");
         res.status(200).json({
             success: true,
-            solutions: solutions,
+            solutionList: solutionList,
         });
     })
 );
 
 // 솔루션 좋아요
 router.patch(
-    "liked/:solutionId",
+    "/liked/:solutionId",
     auth,
     asyncHandler(async (req: CustomRequest, res) => {
         const user = req.user;

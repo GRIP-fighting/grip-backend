@@ -3,8 +3,6 @@ import { User } from "@src/domain/user/user";
 import { Map } from "@src/domain/map/map";
 import { Solution } from "@src/domain/solution/solution";
 
-import { uploadImage, getUrl } from "@src/config/uploadImage";
-
 interface CreateMapInput {
     name: string;
     email: string;
@@ -39,7 +37,7 @@ class SolutionService {
             {
                 $set: {
                     liked: solution.liked,
-                    mapList: solution.likedUserList,
+                    likedUserList: solution.likedUserList,
                 },
             }
         );
@@ -62,6 +60,15 @@ class SolutionService {
         await User.updateOne(
             { userId: user?.userId },
             { $set: { solutionList: user.solutionList } }
+        );
+
+        const map: any = await Map.findOne({ mapId: solution.mapId });
+        map.solutionList = user.solutionList.filter(
+            (mySolutionId: any) => mySolutionId !== solutionId
+        );
+        await Map.updateOne(
+            { mapId: map.mapId },
+            { $set: { solutionList: map.solutionList } }
         );
     }
 }

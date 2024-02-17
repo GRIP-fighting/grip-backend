@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import asyncHandler from "express-async-handler";
 
 import { auth } from "@src/middleware/auth";
+import { uploadMapImage } from "@src/config/uploadImage";
 import { User } from "@src/domain/user/user"; // 모델 스키마 가져오기
 import { Map } from "@src/domain/map/map";
 import { Solution } from "@src/domain/solution/solution";
@@ -25,7 +26,9 @@ interface CustomRequest extends Request {
 router.post(
     "/",
     auth,
+    uploadMapImage.single("mapImage"),
     asyncHandler(async (req, res) => {
+        req.body.userList = JSON.parse(req.body.userList);
         const map: any = new Map(req.body);
         await map.save();
         res.status(200).json({ success: true });
@@ -88,8 +91,7 @@ router.patch(
     asyncHandler(async (req, res) => {
         const mapId = req.params.mapId;
         const { mapName, userList } = req.body;
-        await mapService.updateMap(mapId, mapName, userList);
-
+        await mapService.updateMap(mapId, mapName, JSON.parse(userList));
         res.status(200).send({
             success: true,
         });

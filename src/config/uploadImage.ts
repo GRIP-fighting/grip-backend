@@ -5,7 +5,7 @@ import config from "@src/config/key"; // config 폴더에 있는 key.ts를 가�
 import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
-const uploadImage = multer({
+const uploadProfileImage = multer({
     storage: multerS3({
         s3: s3 as S3Client,
         bucket: config.BUCKET_NAME as string,
@@ -13,6 +13,28 @@ const uploadImage = multer({
         key: function (req: any, file: any, callback: any) {
             const userId = req.user.userId;
             callback(null, `profile_${userId}`);
+        },
+    }),
+});
+
+const uploadMapImage = multer({
+    storage: multerS3({
+        s3: s3 as S3Client,
+        bucket: config.BUCKET_NAME as string,
+        contentType: multerS3.AUTO_CONTENT_TYPE,
+        key: function (req: any, file: any, callback: any) {
+            callback(null, `map_${req.mapCounter}`);
+        },
+    }),
+});
+
+const uploadSolutionImage = multer({
+    storage: multerS3({
+        s3: s3 as S3Client,
+        bucket: config.BUCKET_NAME as string,
+        contentType: multerS3.AUTO_CONTENT_TYPE,
+        key: function (req: any, file: any, callback: any) {
+            callback(null, `map_${req.solutionCounter}`);
         },
     }),
 });
@@ -33,4 +55,4 @@ const getUrl = async (imageName: string) => {
     }
 };
 
-export { uploadImage, getUrl };
+export { uploadProfileImage, uploadMapImage, getUrl };
